@@ -1,0 +1,837 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un appareil photo pour moi 📷</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #FFF5F7;
+  --surface: #FFFFFF;
+  --border:  #F0D8DE;
+  --rose:    #E8A0B0;
+  --rose-dk: #C4607A;
+  --text:    #2C1F26;
+  --muted:   #8A6A74;
+  --mint:    #6BAF95;
+  --ink:     #1A1218;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── PIXELS FOND ─────────────────────────────── */
+#px {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.px-dot {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 1px;
+  animation: pxDrift var(--d) ease-in-out infinite alternate;
+}
+@keyframes pxDrift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(var(--tx), var(--ty)); }
+}
+
+/* ── SHELL ───────────────────────────────────── */
+#app {
+  position: relative; z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
+/* nav */
+.nav-row { display:flex; justify-content:center; gap:6px; margin-bottom:32px; }
+.nav-pip {
+  width:7px; height:7px; border-radius:50%;
+  background: var(--border);
+  transition: all .3s;
+}
+.nav-pip.cur  { background: var(--rose-dk); transform: scale(1.5); }
+.nav-pip.done { background: var(--rose); }
+
+/* écrans */
+.screen { display:none; animation: screenIn .45s ease; }
+.screen.active { display:block; }
+@keyframes screenIn {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── TYPO ────────────────────────────────────── */
+.serif {
+  font-family: 'Instrument Serif', serif;
+}
+h1 { font-family:'Instrument Serif',serif; font-size:clamp(2rem,5vw,2.9rem); font-weight:400; line-height:1.2; color:var(--ink); }
+h2 { font-family:'Instrument Serif',serif; font-size:1.75rem; font-weight:400; color:var(--ink); margin-bottom:6px; }
+p  { line-height:1.75; }
+
+/* ── BOUTONS ─────────────────────────────────── */
+.btn {
+  display: inline-block;
+  padding: 11px 28px;
+  border: 1.5px solid var(--rose-dk);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--rose-dk);
+  font-family: 'Inter', sans-serif;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .2px;
+}
+.btn:hover { background: var(--rose-dk); color: #fff; }
+.btn-fill  { background: var(--rose-dk); color: #fff; }
+.btn-fill:hover { background: var(--text); border-color: var(--text); }
+.btn-ghost {
+  border-color: var(--border);
+  color: var(--muted);
+}
+.btn-ghost:hover { border-color: var(--rose); color: var(--rose-dk); background: transparent; }
+
+/* ── ÉCRAN 0 : INTRO ─────────────────────────── */
+#s0 { padding: 24px 0; }
+.intro-label {
+  font-size: .78rem; font-weight:600; letter-spacing:1.2px;
+  text-transform:uppercase; color:var(--rose-dk);
+  margin-bottom:16px; display:block;
+}
+.intro-h1 { margin-bottom:20px; }
+.intro-p {
+  font-size: .97rem; color: var(--muted);
+  max-width: 480px; margin-bottom:28px;
+}
+.intro-tag-row {
+  display:flex; flex-wrap:wrap; gap:8px; margin-bottom:32px;
+}
+.tag {
+  border: 1px solid var(--border);
+  border-radius:4px;
+  padding:4px 11px;
+  font-size:.8rem; color:var(--muted);
+  background: var(--surface);
+}
+.price-chip {
+  display:inline-block;
+  background: var(--rose-dk);
+  color:#fff;
+  padding:8px 22px;
+  border-radius:5px;
+  font-weight:600; font-size:1.2rem;
+  margin-bottom:32px;
+}
+
+/* ── ÉCRAN 1 : MINI-JEU ──────────────────────── */
+#s1 {}
+.score-row {
+  display:flex; align-items:center; gap:10px;
+  font-size:.85rem; color:var(--muted);
+  margin-bottom:22px;
+}
+.score-num {
+  font-family:'Instrument Serif',serif;
+  font-size:1.5rem; color:var(--ink);
+}
+.progress-track {
+  flex:1; height:3px; background:var(--border); border-radius:2px; overflow:hidden;
+}
+.progress-fill {
+  height:100%; background:var(--rose-dk); border-radius:2px;
+  transition:width .5s ease;
+}
+
+.q-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:28px 24px;
+}
+.q-eyebrow {
+  font-size:.73rem; font-weight:600; letter-spacing:1px;
+  text-transform:uppercase; color:var(--muted);
+  margin-bottom:10px;
+}
+.q-name {
+  font-family:'Instrument Serif',serif;
+  font-size:1.3rem; color:var(--ink);
+  margin-bottom:20px;
+}
+.opts {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:9px; margin-bottom:16px;
+}
+.opt {
+  padding:12px 10px;
+  border:1px solid var(--border);
+  border-radius:7px;
+  background:#fff;
+  font-size:.95rem; font-weight:500;
+  cursor:pointer; color:var(--text);
+  transition:all .18s;
+  text-align:center;
+}
+.opt:hover:not(:disabled) { border-color:var(--rose-dk); color:var(--rose-dk); }
+.opt.good { background:#F0FAF5; border-color:var(--mint); color:#2A6A4A; }
+.opt.bad  { background:#FFF0F3; border-color:var(--rose);  color:#9A3050; }
+
+.q-feedback {
+  font-size:.88rem; font-weight:600;
+  min-height:20px; margin-bottom:6px;
+  text-align:center;
+}
+
+/* fiche révélation */
+.reveal {
+  display:none;
+  animation:screenIn .35s ease;
+  margin-top:18px;
+  border-top:1px solid var(--border);
+  padding-top:18px;
+}
+.reveal.on { display:block; }
+.rev-name  { font-family:'Instrument Serif',serif; font-size:1.05rem; color:var(--ink); margin-bottom:6px; }
+.rev-desc  { font-size:.85rem; color:var(--muted); line-height:1.7; margin-bottom:10px; }
+.tech-note {
+  color: var(--rose-dk);
+  opacity: .75;
+  font-size: .92em;
+}
+.rev-why   {
+  font-size:.83rem; color:var(--text); line-height:1.65;
+  border-left:2px solid var(--rose);
+  padding-left:12px; margin-bottom:10px;
+}
+.rev-price { font-size:.82rem; color:var(--muted); }
+.rev-price strong { color:var(--muted); text-decoration:line-through; }
+
+/* fin jeu */
+.jeu-end {
+  display:none; text-align:center;
+  padding:40px 20px;
+  animation:screenIn .45s ease;
+}
+.jeu-end.on { display:block; }
+.end-score { font-family:'Instrument Serif',serif; font-size:4rem; color:var(--ink); }
+.end-msg { font-size:.95rem; color:var(--muted); margin-top:8px; margin-bottom:28px; line-height:1.7; }
+
+/* ── ÉCRAN 2 : TOTAL ─────────────────────────── */
+#s2 {}
+.total-boxes {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:10px; margin-bottom:28px;
+}
+.t-box {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:9px; padding:16px 14px; text-align:center;
+}
+.t-box-eco { border-color:var(--rose); }
+.t-box-label { font-size:.72rem; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.t-box-val { font-family:'Instrument Serif',serif; font-size:1.85rem; color:var(--ink); line-height:1; }
+.t-box-eco .t-box-val { color:var(--rose-dk); }
+
+.total-list {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; overflow:hidden; margin-bottom:26px;
+}
+.t-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:11px 18px; border-bottom:1px solid var(--border);
+  font-size:.85rem;
+  opacity:0; transform:translateX(-10px);
+  transition:opacity .35s, transform .35s;
+}
+.t-row.vis { opacity:1; transform:translateX(0); }
+.t-row:last-child { border-bottom:none; }
+.t-row-name { color:var(--muted); }
+.t-row-price{ font-weight:600; color:var(--text); }
+
+/* ── ÉCRAN 3 : LA QUESTION ───────────────────── */
+#s3 { text-align:center; padding:48px 0 32px; }
+.q-big { font-size:clamp(2rem,6vw,3rem); margin-bottom:12px; color:var(--ink); }
+.q-p { font-size:.93rem; color:var(--muted); max-width:380px; margin:0 auto 36px; line-height:1.7; }
+.final-btns { display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap; min-height:70px; }
+#btn-oui {
+  padding:13px 42px;
+  background:var(--mint); border:1.5px solid var(--mint);
+  color:#fff; font-weight:600; font-size:1rem;
+  border-radius:6px; cursor:pointer; transition:all .2s;
+}
+#btn-oui:hover { background:#4A9A7A; border-color:#4A9A7A; }
+#btn-non {
+  padding:11px 26px;
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--muted); font-size:.88rem;
+  border-radius:6px; cursor:pointer;
+  font-family:'Inter',sans-serif;
+  transition:border-color .15s;
+}
+.non-msg {
+  font-size:.8rem;
+  color:var(--rose-dk);
+  opacity:.75;
+  margin-top:16px;
+  min-height:18px;
+  font-style:italic;
+}
+
+/* ── ÉCRAN 4 : VICTOIRE ──────────────────────── */
+#s4 { text-align:center; padding:56px 20px; }
+.win-h { font-size:clamp(2rem,6vw,3.2rem); margin-bottom:12px; color:var(--ink); }
+.win-p { font-size:.97rem; color:var(--muted); max-width:380px; margin:0 auto; line-height:1.8; }
+
+/* confetti */
+#cp { position:fixed; inset:0; pointer-events:none; z-index:200; }
+.c { position:absolute; top:-10px; border-radius:var(--r); animation:cFall var(--d) ease-in var(--delay) forwards; }
+@keyframes cFall {
+  to { transform:translateY(110vh) rotate(600deg); opacity:0; }
+}
+
+/* responsive */
+@media(max-width:520px){
+  .total-boxes { grid-template-columns:1fr; }
+  .opts { grid-template-columns:1fr 1fr; }
+}
+.signature {
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  font-size: 0.75rem;
+  color: #d8bcc4;
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
+}
+</style>
+</head>
+<body>
+<div id="px"></div>
+<div id="cp"></div>
+
+<div id="app">
+  <div class="nav-row" id="nav-row">
+    <div class="nav-pip cur" id="np0"></div>
+    <div class="nav-pip" id="np1"></div>
+    <div class="nav-pip" id="np2"></div>
+    <div class="nav-pip" id="np3"></div>
+    <div class="nav-pip" id="np4"></div>
+  </div>
+
+  <!-- ÉCRAN 0 : INTRO -->
+  <div class="screen active" id="s0">
+    <span class="intro-label">Kit photo d'occasion</span>
+    <h1 class="intro-h1">Un Fujifilm X-T3<br><em class="serif" style="color:var(--rose-dk)">complet</em>, à 990 €</h1>
+    <p class="intro-p">
+      Un boîtier hybride professionnel, deux objectifs, et tous les accessoires nécessaires.
+      En très bon état, avec factures au nom du monsieur, boîtes et modes d'emploi.
+    </p>
+    <div class="intro-tag-row">
+      <span class="tag">Fujifilm X-T3</span>
+      <span class="tag">Fujinon XF 23mm F2</span>
+      <span class="tag">Viltrox 56mm f/1.4</span>
+      <span class="tag">8 accessoires inclus</span>
+      <span class="tag">Factures à son nom</span>
+    </div>
+    <div class="price-chip">990 €</div>
+    <br>
+    <button class="btn btn-fill" onclick="goTo(1)">Voir ce que ça vaut vraiment</button>
+  </div>
+
+  <!-- ÉCRAN 1 : MINI-JEU -->
+  <div class="screen" id="s1">
+    <div style="margin-bottom:20px;">
+      <h2>Devine le prix neuf</h2>
+      <p style="font-size:.88rem; color:var(--muted);">Chaque réponse révèle la description complète de l'élément.</p>
+    </div>
+
+    <div class="score-row">
+      <span class="score-num" id="sc-val">0</span>
+      <span>/ <span id="sc-tot">7</span> bonne(s) réponse(s)</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="sc-bar" style="width:0%"></div>
+      </div>
+      <span id="sc-qnum" style="font-size:.8rem; white-space:nowrap;">Q. 1/7</span>
+    </div>
+
+    <div class="q-card" id="q-card">
+      <div class="q-eyebrow" id="q-cat">-</div>
+      <div class="q-name" id="q-name">-</div>
+      <div class="opts" id="q-opts">-</div>
+      <div class="q-feedback" id="q-fb"></div>
+      <div class="reveal" id="q-rev">
+        <div class="rev-name" id="rv-name">-</div>
+        <div class="rev-desc" id="rv-desc">-</div>
+        <div class="rev-why"  id="rv-why">-</div>
+        <div class="rev-price">Prix neuf estimé : <strong id="rv-price">-</strong></div>
+      </div>
+      <div id="q-next" style="margin-top:12px; text-align:center;"></div>
+    </div>
+
+    <div class="jeu-end" id="jeu-end">
+      <div class="end-score" id="end-sc">0/7</div>
+      <div class="end-msg" id="end-msg">-</div>
+      <button class="btn btn-fill" onclick="goTo(2)">Voir le total</button>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 2 : TOTAL -->
+  <div class="screen" id="s2">
+    <div style="margin-bottom:22px;">
+      <h2>Ce que ça coûte neuf</h2>
+      <p style="font-size:.88rem; color:var(--muted);">Et ce que vous payez réellement.</p>
+    </div>
+
+    <div class="total-boxes" id="t-boxes">
+      <div class="t-box">
+        <div class="t-box-label">Prix neuf total</div>
+        <div class="t-box-val"><span id="cnt-neuf">0</span> €</div>
+      </div>
+      <div class="t-box">
+        <div class="t-box-label">Prix demandé</div>
+        <div class="t-box-val">990 €</div>
+      </div>
+      <div class="t-box t-box-eco">
+        <div class="t-box-label">Vous économisez</div>
+        <div class="t-box-val"><span id="cnt-eco">0</span> €</div>
+      </div>
+    </div>
+
+    <div class="total-list" id="t-list"></div>
+
+    <div style="text-align:center">
+      <button class="btn btn-fill" onclick="goTo(3)">La vraie question</button>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 3 : LA QUESTION -->
+  <div class="screen" id="s3">
+    <h1 class="q-big serif">Vous me l'offrez ?</h1>
+    <p class="q-p">Un kit complet, en très bon état, à un prix que vous ne retrouverez pas !</p>
+    <div class="final-btns">
+      <button id="btn-oui" onclick="victoire()">Oui</button>
+      <button id="btn-non">Non</button>
+    </div>
+    <div class="non-msg" id="non-msg"></div>
+  </div>
+
+  <!-- ÉCRAN 4 : VICTOIRE -->
+  <div class="screen" id="s4">
+    <h1 class="win-h serif">Merci !</h1>
+    <p class="win-p">
+      Je vous promets d'en prendre soin,<br>et de faire de belles photos !
+    </p>
+  </div>
+</div>
+
+<script>
+/* ── DATA ────────────────────────────────────── */
+const ITEMS = [
+ {
+  cat:'Boîtier',
+  name:'Fujifilm X-T3',
+  desc:'Capteur APS-C 26 Mpx <span class="tech-note">(le composant qui capture l’image, suffisamment détaillé pour imprimer en grand format ou recadrer sans perdre en qualité)</span>, vidéo 4K 60 fps <span class="tech-note">(vidéos très détaillées et fluides, même sur un grand écran)</span>, autofocus à détection de phase sur toute la surface <span class="tech-note">(mise au point rapide presque partout dans l’image, même sur les sujets en mouvement)</span>, écran orientable <span class="tech-note">(pratique pour photographier au-dessus d’une foule, au ras du sol ou se filmer)</span>, viseur électronique 3,69 Mvp <span class="tech-note">(permet de voir exactement le rendu final avant de prendre la photo)</span>. Un hybride de référence utilisé par des professionnels.',
+  why:'Le X-T3 est connu pour ses simulations de film (rendu argentique unique), sa solidité et son ergonomie pensée pour la photo. C\'est un boîtier qui dure.',
+  price:1500,
+  label:'~1 500 €'
+},
+
+  { cat:'Objectif grand-angle', name:'Fujinon XF 23mm F2 WR',
+    desc:'Équivalent 35 mm <span class="tech-note">(champ de vision très proche de ce que voit naturellement l’œil humain)</span>. Ouverture F2 <span class="tech-note">(laisse entrer beaucoup de lumière et permet de flouter l’arrière-plan)</span>, résistant aux intempéries <span class="tech-note">(supporte la pluie légère, la poussière et le froid)</span>, autofocus silencieux <span class="tech-note">(mise au point discrète, idéale pour la vidéo ou les lieux calmes)</span>. La focale la plus polyvalente qui soit.',
+    why:'Le 35 mm est considéré comme "l\'œil humain" en photo. Paysages, scènes de vie, portraits larges — c\'est l\'objectif qu\'on garde en permanence sur le boîtier.',
+    price:500, label:'~500 €' 
+},
+
+  { cat:'Objectif portrait', name:'Viltrox AF 56mm f/1.4 XF',
+    desc:'Équivalent 85 mm <span class="tech-note">(idéal pour les portraits naturels sans déformer le visage)</span>. Ouverture f/1.4 extrêmement lumineuse <span class="tech-note">(fonctionne très bien même quand la lumière manque)</span>, autofocus rapide <span class="tech-note">(fait la mise au point presque instantanément)</span>, bokeh crémeux <span class="tech-note">(arrière-plan très flou et esthétique qui met le sujet en valeur)</span>. La focale portrait par définition.',
+    why:'Avec f/1.4, l\'arrière-plan se dissout en flou doux. C\'est l\'objectif pour les portraits, les détails, la lumière basse. Qualité optique équivalente aux grandes marques à la moitié du prix.',
+    price:280, label:'~280 €' 
+},
+
+  { cat:'Sangle', name:'Carry Speed CS-Pro Mark II',
+    desc:'Sangle à dégagement rapide brevetée <span class="tech-note">(permet d’attraper ou ranger l’appareil en quelques secondes)</span>, clip métal <span class="tech-note">(plus solide et durable qu’un système plastique classique)</span>, rembourrage ergonomique <span class="tech-note">(répartit le poids pour éviter les douleurs à l’épaule)</span>. L’appareil s’accroche et se décroche en une fraction de seconde.',
+    why:'Une journée de photo avec une mauvaise sangle, c\'est une journée inconfortable. Le CS-Pro est utilisé par des photojournalistes — c\'est du sérieux.',
+    price:90, label:'~90 €' 
+},
+
+  { cat:'Adaptateur', name:'Monture Contax/Yashica (C/Y)',
+    desc:'Permet d’utiliser des objectifs Carl Zeiss Contax des années 70–90 sur le X-T3 <span class="tech-note">(des objectifs anciens réputés pour leur qualité d’image et leur caractère unique)</span>. Mécanique, sans électronique <span class="tech-note">(aucune batterie ni logiciel, uniquement une pièce métallique très fiable)</span>.',
+    why:'Les Zeiss C/Y (Planar 50mm, Distagon 28mm…) sont des légendes de l\'optique argentique. Sur l\'occasion, on en trouve pour 80–200 €. Un univers entier s\'ouvre.',
+    price:35, label:'~35 €' 
+},
+
+  { cat:'Adaptateur', name:'Monture M42',
+    desc:'Accès aux objectifs à vis M42 <span class="tech-note">(un standard utilisé par de nombreuses marques pendant plusieurs décennies)</span>, des centaines de références disponibles <span class="tech-note">(énorme choix d’objectifs anciens à petit prix)</span>.',
+    why:'L\'Helios 44 et son bokeh tourbillonnant légendaire est un M42. Tout comme des Zeiss Jena, Super-Takumar… Pour quelques dizaines d\'euros, des rendus impossibles à reproduire avec du neuf.',
+    price:20, label:'~20 €' 
+},
+
+  { cat:'Filtres', name:'Filtres Hoya (UV, Polarisant, ND)',
+    desc:'Hoya est une référence mondiale pour les filtres optiques <span class="tech-note">(l’équivalent d’une marque haut de gamme dans ce domaine)</span>. UV pour la protection <span class="tech-note">(agit comme une vitre de protection devant l’objectif)</span>, polarisant pour supprimer les reflets et saturer les couleurs <span class="tech-note">(ciel plus bleu, eau plus transparente, vitres moins réfléchissantes)</span>, ND pour les longues expositions <span class="tech-note">(agit comme des lunettes de soleil pour l’objectif afin de photographier ou filmer en plein soleil)</span>.',
+    why:'Le polarisant seul change radicalement une photo de ciel ou d\'eau. Le ND permet de filmer ou photographier en plein soleil avec une grande ouverture. Des outils qu\'on regrette d\'avoir ignorés.',
+    price:120, label:'~120 €' 
+},
+
+  { cat:'Protection', name:'Protecteur d\'écran Afunta',
+    desc:'Verre trempé taillé précisément pour l’écran du X-T3 <span class="tech-note">(protection rigide contre les rayures et petits chocs)</span>. Invisible une fois posé <span class="tech-note">(ne change ni les couleurs ni la sensibilité tactile de l’écran)</span>.',
+    why:'L\'écran est orientable, donc exposé. Un remplacement coûte plus de 200 €. Un protecteur vaut 10 €.',
+    price:12, label:'~12 €' 
+},
+
+  { cat:'Accessoires', name:'Sangles & dragonnes supplémentaires',
+    desc:'Plusieurs options de port en main et au cou <span class="tech-note">(selon le niveau de confort ou de sécurité recherché)</span>, longueurs et styles variés <span class="tech-note">(adaptables à différents usages et préférences)</span>.',
+    why:'Selon la situation — discrétion en ville, confort en randonnée, stabilité en reportage — on n\'utilise pas le même type de sangle.',
+    price:30, label:'~30 €' 
+},
+
+  { cat:'Stabilisation', name:'Joby GorillaPod',
+    desc:'Trépied flexible de 200 g <span class="tech-note">(très léger et facile à transporter)</span>, jambes articulées <span class="tech-note">(peut s’accrocher à une branche, une rambarde ou un poteau)</span>. Se glisse dans n’importe quel sac <span class="tech-note">(prend très peu de place)</span>.',
+    why:'Pour les selfies, la vidéo, les poses longues de nuit ou accroché à une rambarde. Le GorillaPod est une icône de la photo nomade depuis vingt ans.',
+    price:80, label:'~80 €' 
+},
+
+  { cat:'Alimentation', name:'Chargeur d\'origine + 2 batteries NP-W126S',
+    desc:'Chargeur officiel Fujifilm <span class="tech-note">(garantit une recharge fiable et sécurisée)</span> et deux batteries d’origine <span class="tech-note">(meilleure autonomie et durée de vie que les copies génériques)</span>. Autonomie d’environ 370 vues par batterie <span class="tech-note">(souvent suffisant pour plusieurs heures de photographie)</span>.',
+    why:'Deux batteries de rechange permettent de photographier toute une journée sans craindre de tomber en panne. Les batteries tierces dégradent l\'autonomie de 30 à 40 %. Celles-ci sont les originales.',
+    price:80, label:'~80 €' 
+}
+];
+
+const NEUF  = ITEMS.reduce((s,i)=>s+i.price,0); // 2747
+const ASKED = 990;
+const ECO   = NEUF - ASKED;                       // 1757
+const JEU   = ITEMS.slice(0,7);
+
+/* ── FOND PIXELS ─────────────────────────────── */
+(() => {
+  const px = document.getElementById('px');
+  // Teintes très proches du fond : rose très clair et quelques touches mint
+  const cols = ['#F5C8D2','#EDB8C8','#F0D0DA','#C8E8DC','#F8D8E0','#D8EED8'];
+  for (let i = 0; i < 48; i++) {
+    const d = document.createElement('div');
+    d.className = 'px-dot';
+    const tx = (Math.random()-0.5)*40;
+    const ty = (Math.random()-0.5)*35;
+    d.style.cssText = `
+      left:${Math.random()*100}%; top:${Math.random()*100}%;
+      background:${cols[i%cols.length]};
+      opacity:${0.55+Math.random()*.35};
+      --d:${10+Math.random()*12}s;
+      --tx:${tx}px; --ty:${ty}px;
+      animation-delay:${Math.random()*10}s;
+    `;
+    px.appendChild(d);
+  }
+})();
+
+/* ── NAV ─────────────────────────────────────── */
+let cur = 0;
+const SCREENS = ['s0','s1','s2','s3','s4'];
+
+function goTo(n) {
+  document.getElementById(SCREENS[cur]).classList.remove('active');
+  cur = n;
+  document.getElementById(SCREENS[cur]).classList.add('active');
+  updateNav();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (n===1) initJeu();
+  if (n===2) initTotal();
+  if (n===3) resetNon();
+}
+
+function updateNav() {
+  for (let i=0;i<5;i++) {
+    const el = document.getElementById('np'+i);
+    el.className = 'nav-pip';
+    if (i < cur) el.classList.add('done');
+    if (i === cur) el.classList.add('cur');
+  }
+}
+
+/* ── JEU ─────────────────────────────────────── */
+let jScore=0, jIdx=0, jDone=false;
+
+function initJeu() {
+  jScore=0; jIdx=0; jDone=false;
+  document.getElementById('sc-tot').textContent = JEU.length;
+  document.getElementById('jeu-end').classList.remove('on');
+  document.getElementById('q-card').style.display = 'block';
+  renderQ();
+}
+
+function renderQ() {
+  if (jIdx >= JEU.length) { endJeu(); return; }
+  const it = JEU[jIdx];
+  document.getElementById('sc-qnum').textContent = `Q. ${jIdx+1}/${JEU.length}`;
+  document.getElementById('sc-bar').style.width = (jIdx/JEU.length*100)+'%';
+  document.getElementById('q-cat').textContent  = it.cat;
+  document.getElementById('q-name').textContent = it.name;
+  document.getElementById('q-fb').textContent   = '';
+  document.getElementById('q-rev').classList.remove('on');
+  document.getElementById('q-next').innerHTML   = '';
+
+  const opts = shuffle([it.price, ...fakes(it.price)]);
+  const grid = document.getElementById('q-opts');
+  grid.innerHTML = '';
+  opts.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = p + ' €';
+    b.addEventListener('click', () => answer(b, p, it));
+    grid.appendChild(b);
+  });
+}
+
+function answer(clicked, chosen, item) {
+  if (jDone) return;
+  jDone = true;
+
+  document.querySelectorAll('.opt').forEach(b => {
+    b.disabled = true;
+    const v = parseInt(b.textContent);
+    if (v === item.price) b.classList.add('good');
+    else if (b === clicked && v !== item.price) b.classList.add('bad');
+  });
+
+  const ok = chosen === item.price;
+  if (ok) { jScore++; document.getElementById('sc-val').textContent = jScore; }
+
+  const fb = document.getElementById('q-fb');
+  fb.textContent = ok ? 'Exact.' : `Non, c'était ${item.price} €`;
+  fb.style.color  = ok ? 'var(--mint)' : 'var(--rose-dk)';
+
+  // Révélation
+document.getElementById('rv-name').textContent  = item.name;
+document.getElementById('rv-desc').innerHTML    = item.desc;
+document.getElementById('rv-why').textContent   = item.why;
+document.getElementById('rv-price').textContent = item.label;
+document.getElementById('q-rev').classList.add('on');
+
+  jIdx++;
+  const next = document.getElementById('q-next');
+  if (jIdx < JEU.length) {
+    const b = document.createElement('button');
+    b.className = 'btn btn-ghost'; b.style.fontSize = '.85rem';
+    b.textContent = 'Question suivante';
+    b.addEventListener('click', () => { jDone=false; renderQ(); });
+    next.appendChild(b);
+  } else {
+    setTimeout(endJeu, 900);
+  }
+}
+
+function endJeu() {
+  document.getElementById('q-card').style.display='none';
+  const el = document.getElementById('jeu-end');
+  el.classList.add('on');
+  document.getElementById('end-sc').textContent = `${jScore}/${JEU.length}`;
+  const msgs = [
+    [7,'Score parfait. Vous saviez déjà tout.'],
+    [5,'Bon score. Maintenant vous pouvez le dire.'],
+    [3,'Pas mal, l\'essentiel, c\'est de voir la valeur réelle.'],
+    [0,'Maintenant vous savez ce que ça vaut vraiment.']
+  ];
+  for (const [min,msg] of msgs) {
+    if (jScore>=min) { document.getElementById('end-msg').textContent=msg; break; }
+  }
+}
+
+function fakes(correct) {
+  const mults = [0.3,0.55,1.7,2.2,0.2,1.4];
+  const s = new Set();
+  for (const m of mults) {
+    const v = Math.round(correct*m/10)*10;
+    if (v!==correct && v>5) s.add(v);
+    if (s.size>=3) break;
+  }
+  while (s.size<3) {
+    const v = Math.round(correct*(0.2+Math.random()*2.2)/10)*10;
+    if (v!==correct&&v>5) s.add(v);
+  }
+  return [...s].slice(0,3);
+}
+
+function shuffle(a) {
+  for (let i=a.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/* ── TOTAL ANIMÉ ─────────────────────────────── */
+function initTotal() {
+  // compteurs en haut
+  animCount('cnt-neuf', 0, NEUF, 1800);
+  setTimeout(()=>animCount('cnt-eco', 0, ECO, 1400), 400);
+
+  // liste
+  const list = document.getElementById('t-list');
+  list.innerHTML = '';
+  ITEMS.forEach((it,i) => {
+    const row = document.createElement('div');
+    row.className = 't-row';
+    row.innerHTML = `<span class="t-row-name">${it.name}</span><span class="t-row-price">${it.label}</span>`;
+    list.appendChild(row);
+    setTimeout(()=>row.classList.add('vis'), 60+60*i);
+  });
+}
+
+function animCount(id, from, to, dur) {
+  const el = document.getElementById(id);
+  const t0 = performance.now();
+  const tick = now => {
+    const p = Math.min((now-t0)/dur, 1);
+    const e = 1-Math.pow(1-p,3);
+    el.textContent = Math.round(from+(to-from)*e).toLocaleString('fr-FR');
+    if (p<1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ── BOUTON NON ──────────────────────────────── */
+let nonTries = 0;
+const nonTexts = [
+  '…',
+  'Vraiment ?',
+  'Reconsidère.',
+  'T\'es sûr(e) ?',
+  'Regarde le prix encore une fois.',
+  'C\'est une mauvaise idée.',
+  'Très mauvaise idée.',
+  'Tu vas le regretter.',
+  'Dernière chance.',
+  'Sérieusement.',
+  'Je sens une erreur de jugement.',
+  'Le Fujifilm est triste.',
+  'Le 23 mm est triste aussi.',
+  'Même le GorillaPod te regarde bizarrement.',
+  'Tu n\'as pas fini le calcul.',
+  'Refais le calcul.',
+  'Toujours non ?',
+  'Ça devient personnel.',
+  'Je note ton obstination.',
+  'Impressionnant.',
+  'Inquiétant.',
+  'Très inquiétant.',
+  'Le bouton Oui est pourtant très joli.',
+  'Il est juste là.',
+  'Tu le vois ?',
+  'Clique-le.',
+  'Allez.',
+  'Encore un effort.',
+  'Tu résistes bien.',
+  'Je respecte ça.',
+  'Mais quand même.',
+  '990 €.',
+  'Deux objectifs.',
+  'Des accessoires.',
+  'Les factures.',
+  'Les boîtes.',
+  'Le mode d\'emploi.',
+  'Que faut-il de plus ?',
+  'Je commence à manquer d\'arguments.',
+  'Presque.',
+  'En fait non.',
+  'Toujours pas.',
+  'Le bouton Non fatigue.',
+  'Moi aussi.',
+  'Bon.',
+  'Très bon.',
+  'Exceptionnellement bon.',
+  'Tu as gagné le droit de cliquer sur Oui.',
+  '(il refuse toujours de s\'arrêter)'
+];
+
+function resetNon() {
+  nonTries = 0;
+  const b = document.getElementById('btn-non');
+  b.style.cssText = '';
+  document.getElementById('non-msg').textContent = '';
+  document.removeEventListener('mousemove', trackMouse);
+  document.addEventListener('mousemove', trackMouse);
+}
+
+function trackMouse(e) {
+  const btn = document.getElementById('btn-non');
+  if (!btn || btn.style.display==='none') return;
+  const r = btn.getBoundingClientRect();
+  const bx = r.left + r.width/2;
+  const by = r.top  + r.height/2;
+  const dx = e.clientX - bx;
+  const dy = e.clientY - by;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  if (dist > 140) return; // zone de fuite : 140px
+
+  nonTries++;
+  document.getElementById('non-msg').textContent = nonTexts[Math.min(nonTries-1, nonTexts.length-1)];
+
+  const spd = 160 + nonTries * 18;
+  const angle = Math.atan2(by-e.clientY, bx-e.clientX);
+  let nx = bx + Math.cos(angle)*spd;
+  let ny = by + Math.sin(angle)*spd;
+
+  nx = Math.max(60, Math.min(window.innerWidth  - 80, nx));
+  ny = Math.max(60, Math.min(window.innerHeight - 50, ny));
+
+  btn.style.position   = 'fixed';
+  btn.style.left       = nx + 'px';
+  btn.style.top        = ny + 'px';
+  btn.style.transition = 'left .12s, top .12s';
+  btn.style.zIndex     = '1000';
+  btn.style.transform = `scale(${Math.max(0.75, 1 - nonTries*0.008)})`;
+
+  if (nonTries >= 150) {
+    btn.style.display='none';
+    document.getElementById('non-msg').textContent = '';
+    document.removeEventListener('mousemove', trackMouse);
+  }
+}
+
+/* ── VICTOIRE ────────────────────────────────── */
+function victoire() {
+  document.removeEventListener('mousemove', trackMouse);
+  goTo(4);
+  makeConfetti();
+}
+
+function makeConfetti() {
+  const layer = document.getElementById('cp');
+  layer.innerHTML = '';
+  const cols = ['#F5C8D2','#C4607A','#B8E8D8','#6BAF95','#D8C0E8','#F0D0A0'];
+  for (let i=0;i<90;i++) {
+    const el = document.createElement('div');
+    el.className = 'c';
+    const sz = 5+Math.random()*9;
+    el.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${sz}px; height:${sz}px;
+      background:${cols[Math.floor(Math.random()*cols.length)]};
+      --r:${Math.random()>.5?'50%':'2px'};
+      --d:${1.4+Math.random()*2}s;
+      --delay:${Math.random()*1.6}s;
+    `;
+    layer.appendChild(el);
+  }
+  setTimeout(()=>layer.innerHTML='', 5500);
+}
+</script>
+
+<div class="signature">Mathilde VIANNEZ</div>
+
+</body>
+</html>
